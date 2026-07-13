@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Handy-Test</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 25px;
+      font-family: Arial, sans-serif;
+      background: #f3f5f7;
+      color: #222;
+    }
+
+    .box {
+      width: 100%;
+      max-width: 500px;
+      margin: 40px auto;
+      padding: 25px;
+      background: white;
+      border-radius: 14px;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.12);
+    }
+
+    h1 {
+      margin-top: 0;
+      font-size: 25px;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 150px;
+      padding: 14px;
+      font-size: 18px;
+      border: 2px solid #aaa;
+      border-radius: 8px;
+      resize: vertical;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 16px;
+      padding: 16px;
+      border: none;
+      border-radius: 8px;
+      background: #007bc0;
+      color: white;
+      font-size: 19px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      background: #999;
+      cursor: not-allowed;
+    }
+
+    #meldung {
+      margin-top: 18px;
+      text-align: center;
+      font-weight: bold;
+    }
+
+    .erfolg {
+      color: green;
+    }
+
+    .fehler {
+      color: #c00000;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="box">
+  <h1>Text an Rechner senden</h1>
+
+  <textarea
+    id="text"
+    placeholder="Hier Text eingeben..."
+  ></textarea>
+
+  <button id="sendenButton" onclick="senden()">
+    Senden
+  </button>
+
+  <div id="meldung"></div>
+</div>
+
+<script>
+  /*
+    Hier kommt die URL deines SPEICHER-FLOWS hinein.
+    Verwende später eine neu erzeugte URL.
+  */
+  const FLOW_URL = "https://default0ae51e1907c84e4bbb6d648ee58410.f4.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/19bfb9db302b41f78dd5b57fc5b377c1/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=Y3XDlVr3FfP89n1W_cTN0stzkUO4OnObbIcHrIetWmE";
+
+  async function senden() {
+    const textfeld = document.getElementById("text");
+    const button = document.getElementById("sendenButton");
+    const meldung = document.getElementById("meldung");
+
+    const text = textfeld.value.trim();
+
+    if (!text) {
+      meldung.className = "fehler";
+      meldung.textContent = "Bitte zuerst einen Text eingeben.";
+      return;
+    }
+
+    button.disabled = true;
+    button.textContent = "Wird gesendet...";
+    meldung.className = "";
+    meldung.textContent = "";
+
+    try {
+      /*
+        Absichtlich kein Content-Type-Header.
+        Dadurch wird bei vielen Browsern keine zusätzliche
+        CORS-Vorabfrage erzeugt.
+      */
+      const response = await fetch(FLOW_URL, {
+        method: "POST",
+        body: JSON.stringify({
+          text: text
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP-Fehler ${response.status}`);
+      }
+
+      meldung.className = "erfolg";
+      meldung.textContent = "Text wurde erfolgreich gesendet.";
+
+      textfeld.value = "";
+    } catch (fehler) {
+      console.error(fehler);
+
+      meldung.className = "fehler";
+      meldung.textContent =
+        "Senden fehlgeschlagen. Bitte Verbindung und Flow prüfen.";
+    } finally {
+      button.disabled = false;
+      button.textContent = "Senden";
+    }
+  }
+</script>
+
+</body>
+</html>
