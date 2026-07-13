@@ -96,11 +96,7 @@
 </div>
 
 <script>
-  /*
-    Hier kommt die URL deines SPEICHER-FLOWS hinein.
-    Verwende später eine neu erzeugte URL.
-  */
-  const FLOW_URL = "https://default0ae51e1907c84e4bbb6d648ee58410.f4.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/19bfb9db302b41f78dd5b57fc5b377c1/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=Y3XDlVr3FfP89n1W_cTN0stzkUO4OnObbIcHrIetWmE";
+  const FLOW_URL = "HIER_DIE_URL_DIREKT_AUS_POWER_AUTOMATE_EINFÜGEN";
 
   async function senden() {
     const textfeld = document.getElementById("text");
@@ -118,35 +114,40 @@
     button.disabled = true;
     button.textContent = "Wird gesendet...";
     meldung.className = "";
-    meldung.textContent = "";
+    meldung.textContent = "Verbindung wird hergestellt...";
 
     try {
-      /*
-        Absichtlich kein Content-Type-Header.
-        Dadurch wird bei vielen Browsern keine zusätzliche
-        CORS-Vorabfrage erzeugt.
-      */
       const response = await fetch(FLOW_URL, {
         method: "POST",
+        mode: "cors",
+        headers: {
+          "Content-Type": "text/plain;charset=UTF-8"
+        },
         body: JSON.stringify({
           text: text
         })
       });
 
+      const antwortText = await response.text();
+
       if (!response.ok) {
-        throw new Error(`HTTP-Fehler ${response.status}`);
+        throw new Error(
+          "HTTP " + response.status + " – " + antwortText
+        );
       }
 
       meldung.className = "erfolg";
-      meldung.textContent = "Text wurde erfolgreich gesendet.";
+      meldung.textContent =
+        "Erfolgreich gesendet. Serverantwort: " + antwortText;
 
       textfeld.value = "";
+
     } catch (fehler) {
       console.error(fehler);
 
       meldung.className = "fehler";
       meldung.textContent =
-        "Senden fehlgeschlagen. Bitte Verbindung und Flow prüfen.";
+        "GENAUER FEHLER: " + fehler.message;
     } finally {
       button.disabled = false;
       button.textContent = "Senden";
